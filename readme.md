@@ -5,8 +5,14 @@ Naive csvparser. This code may work, or it may not. I just got bored by writing 
 
 ## Sample usage:
 
-```
+```dart
+import 'package:csvparser/csvparser.dart';
+
 String data="\"hello\",\"world\"\n\"wie\ngeht's\",\"dir\"";
 
-CsvParser cp = new CsvParser(data, seperator:",", quotemark:"\""); while(cp.moveNext()) { while(cp.current.moveNext()) print(cp.current.current); }
+CsvParser cp = new CsvParser(data, seperator:",", quotemark:"\"");
+
+while(cp.moveNext()) { 
+  while(cp.current.moveNext()) print(cp.current.current); 
+}
 ```
