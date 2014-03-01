@@ -10,6 +10,7 @@ class CsvParser implements Iterator<Iterator<String>> {
   String _QUOTEMARK;
   String _LINEEND;
   Iterator<String> current=null;
+  Iterator iterator;
 
   CsvParser(String file, {String seperator:",", String quotemark:"\"", String lineend:null}) {
     this._file=file.trim();
@@ -23,6 +24,7 @@ class CsvParser implements Iterator<Iterator<String>> {
         this._LINEEND="\n";
     }
     _naive=new Queue.from(_file.split(_LINEEND));
+    iterator = this;
   }
 
   Queue<String> _removeNaiveQueue()=>new Queue.from(_naive.removeFirst().trim().split(_SEPERATOR));
@@ -51,11 +53,13 @@ class CsvLineParser implements Iterator<String> {
   String _SEPERATOR;
   String _QUOTEMARK;
   String current=null;
+  Iterator iterator;
 
   CsvLineParser(this._line, {String seperator:",", String quotemark:"\""}) {
     this._SEPERATOR=seperator;
     this._QUOTEMARK=quotemark;
     this._naive=new Queue.from(_line.trim().split(_SEPERATOR));
+    iterator = this;
   }
 
   bool moveNext() {
