@@ -2,82 +2,96 @@ library csvparser;
 
 import 'dart:collection';
 
-class CsvParser extends Iterator with IterableMixin<CsvLineParser> {
-  String _file;
-  Queue<String> _naive;
-  String _SEPERATOR;
-  String _QUOTEMARK;
-  String _LINEEND;
+class CsvParserIterator extends Iterator<CsvLineParser> {
+  CsvParser data;
+  CsvParserIterator(this.data);
   CsvLineParser current = null;
 
-  CsvParser(String file, {String seperator: ",", String quotemark: "\"", String
-      lineend: null}) {
-    this._file = file.trim();
-    this._SEPERATOR = seperator;
-    this._QUOTEMARK = quotemark;
-    this._LINEEND = lineend;
-    if (this._LINEEND == null) {
-      if (_file.contains("\r\n")) {
-        this._LINEEND = "\r\n";
-      } else {
-        this._LINEEND = "\n";
-      }
-    }
-    _naive = new Queue.from(_file.split(_LINEEND));
-  }
-
-  Iterator<CsvLineParser> get iterator => this;
-
-  Queue<String> _removeNaiveQueue() => new Queue.from(_naive.removeFirst().trim(
-      ).split(_SEPERATOR));
-
   bool moveNext() {
-    if (_naive.isEmpty) {
+    if (data.naive.isEmpty) {
       current = null;
       return false;
     }
-    Queue<String> nn = _removeNaiveQueue();
-    while (nn.last.startsWith(_QUOTEMARK) && !nn.last.endsWith(_QUOTEMARK)) {
+    Queue<String> nn = data.removeNaiveQueue();
+    while (nn.last.startsWith(data.QUOTEMARK) && !nn.last.endsWith(data.QUOTEMARK)) {
       String l = nn.removeLast();
-      Queue<String> nn2 = _removeNaiveQueue();
-      String ln = l + _LINEEND + nn2.removeFirst();
+      Queue<String> nn2 = data.removeNaiveQueue();
+      String ln = l + data.LINEEND + nn2.removeFirst();
       nn
           ..add(ln)
           ..addAll(nn2);
     }
-    current = new CsvLineParser(nn.join(_SEPERATOR), seperator: _SEPERATOR,
-        quotemark: _QUOTEMARK);
+    current = new CsvLineParser(nn.join(data.SEPERATOR), seperator: data.SEPERATOR,
+        quotemark: data.QUOTEMARK);
     return true;
   }
+}
+
+class CsvParser extends Object with IterableMixin<CsvLineParser> {
+  String _file;
+  Queue<String> naive;
+  String SEPERATOR;
+  String QUOTEMARK;
+  String LINEEND;
+
+  CsvParser(String file, {String seperator: ",", String quotemark: "\"", String
+      lineend: null}) {
+    this._file = file.trim();
+    this.SEPERATOR = seperator;
+    this.QUOTEMARK = quotemark;
+    this.LINEEND = lineend;
+    if (this.LINEEND == null) {
+      if (_file.contains("\r\n")) {
+        this.LINEEND = "\r\n";
+      } else {
+        this.LINEEND = "\n";
+      }
+    }
+    naive = new Queue.from(_file.split(LINEEND));
+  }
+
+  Iterator<CsvLineParser> get iterator => new CsvParserIterator(this);
+
+  Queue<String> removeNaiveQueue() => new Queue.from(naive.removeFirst().trim(
+      ).split(SEPERATOR));
+
+
 
 }
 
-class CsvLineParser extends Iterator with IterableMixin<String> {
-  String _line;
-  Queue<String> _naive;
-  String _SEPERATOR;
-  String _QUOTEMARK;
+class CsvLineParserIterator extends Iterator<String> {
+  CsvLineParser data;
+  CsvLineParserIterator(this.data);
   String current = null;
 
-  Iterator<String> get iterator => this;
-
-  CsvLineParser(this._line, {String seperator: ",", String quotemark: "\""}) {
-    this._SEPERATOR = seperator;
-    this._QUOTEMARK = quotemark;
-    this._naive = new Queue.from(_line.trim().split(_SEPERATOR));
-  }
-
   bool moveNext() {
-    if (_naive.isEmpty) {
+    if (data.naive.isEmpty) {
       current = null;
       return false;
     }
-    String tt = _naive.removeFirst();
-    while (tt.startsWith(_QUOTEMARK) && !tt.endsWith(_QUOTEMARK)) {
-      tt = tt + _SEPERATOR + _naive.removeFirst();
+    String tt = data.naive.removeFirst();
+    while (tt.startsWith(data.QUOTEMARK) && !tt.endsWith(data.QUOTEMARK)) {
+      tt = tt + data.SEPERATOR + data.naive.removeFirst();
     }
     current = tt;
     return true;
   }
+}
+
+class CsvLineParser extends Object with IterableMixin<String> {
+  String _line;
+  Queue<String> naive;
+  String SEPERATOR;
+  String QUOTEMARK;
+
+  Iterator<String> get iterator => new CsvLineParserIterator(this);
+
+  CsvLineParser(this._line, {String seperator: ",", String quotemark: "\""}) {
+    this.SEPERATOR = seperator;
+    this.QUOTEMARK = quotemark;
+    this.naive = new Queue.from(_line.trim().split(SEPERATOR));
+  }
+
+
 
 }
