@@ -12,9 +12,10 @@ main()
   CsvParser data = new CsvParser(raw);
   for(var row in data)
   {
-//    for(var col in row)
-//    {
-      print('${row}\t ');
-//    }
+    print('${row}');
+    for(var col in row)
+    {
+      print('${col}\t');
+    }
   }
 }

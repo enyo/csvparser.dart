@@ -79,7 +79,7 @@ class CsvLineParserIterator extends Iterator
         tt = tt + separator + cols[cursor++];
         tt.trim();
       }
-      if(tt.startsWith(quotemark) && tt.indexOf(quotemark, tt.length-1))
+      if(tt.startsWith(quotemark) && tt.indexOf(quotemark, tt.length-1) > -1)
       {
         tt = tt.substring(1, tt.length-1);
       }
