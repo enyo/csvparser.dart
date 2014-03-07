@@ -2,96 +2,115 @@ library csvparser;
 
 import 'dart:collection';
 
-class CsvParserIterator extends Iterator<CsvLineParser> {
-  CsvParser data;
-  CsvParserIterator(this.data);
-  CsvLineParser current = null;
+class CsvParserIterator extends Iterator {
+  CsvLineParser current;
+  List<String> rows;
+  String separator;
+  String quotemark;
+  int cursor = 0;
 
-  bool moveNext() {
-    if (data.naive.isEmpty) {
+  CsvParserIterator(this.rows, this.separator, this.quotemark);
+
+  bool moveNext()
+  {
+    print('CsvParser.cursor: ${cursor}');
+    if (rows == null || cursor >= rows.length)
+    {
       current = null;
+      // reset the cursor?
+//      cursor = 0;
       return false;
     }
-    Queue<String> nn = data.removeNaiveQueue();
-    while (nn.last.startsWith(data.QUOTEMARK) && !nn.last.endsWith(data.QUOTEMARK)) {
-      String l = nn.removeLast();
-      Queue<String> nn2 = data.removeNaiveQueue();
-      String ln = l + data.LINEEND + nn2.removeFirst();
-      nn
-          ..add(ln)
-          ..addAll(nn2);
-    }
-    current = new CsvLineParser(nn.join(data.SEPERATOR), seperator: data.SEPERATOR,
-        quotemark: data.QUOTEMARK);
+
+    current = new CsvLineParser(rows[cursor], separator:separator, quotemark:quotemark);
+    cursor++;
     return true;
   }
 }
 
-class CsvParser extends Object with IterableMixin<CsvLineParser> {
-  String _file;
-  Queue<String> naive;
-  String SEPERATOR;
-  String QUOTEMARK;
-  String LINEEND;
+class CsvParser extends Object with IterableMixin
+{
+  List<String> rows;
+  String separator;
+  String quotemark;
 
-  CsvParser(String file, {String seperator: ",", String quotemark: "\"", String
-      lineend: null}) {
-    this._file = file.trim();
-    this.SEPERATOR = seperator;
-    this.QUOTEMARK = quotemark;
-    this.LINEEND = lineend;
-    if (this.LINEEND == null) {
-      if (_file.contains("\r\n")) {
-        this.LINEEND = "\r\n";
-      } else {
-        this.LINEEND = "\n";
+  CsvLineParser header;
+
+  Iterator get iterator => new CsvParserIterator(rows, separator, quotemark);
+
+  CsvParser(String sheet, {String seperator:",", String quotemark:"\"", bool hasHeader:false})
+  {
+    this.separator = seperator;
+    this.quotemark = quotemark;
+
+    this.rows = sheet.trim().split('\n');
+    if(hasHeader && rows != null && rows.length > 0)
+    {
+      header = new CsvLineParser(rows.removeAt(0));
+    }
+  }
+
+}
+
+class CsvLineParserIterator extends Iterator
+{
+  List<String> cols;
+  String separator;
+  String quotemark;
+  String current;
+  int cursor = 0;
+
+  CsvLineParserIterator(this.cols, this.separator, this.quotemark);
+
+  bool moveNext()
+    {
+      print('CsvLineParser.cursor: ${cursor}');
+      if (cols == null || cursor >= cols.length)
+      {
+        current = null;
+        // reset the cursor?
+//        cursor = 0;
+        return false;
       }
+      String tt = cols[cursor++];
+
+      while (tt.startsWith(quotemark) && !tt.endsWith(quotemark))
+      {
+        tt = tt + separator + cols[cursor++];
+        tt.trim();
+      }
+      if(tt.startsWith(quotemark) && tt.indexOf(quotemark, tt.length-1))
+      {
+        tt = tt.substring(1, tt.length-1);
+      }
+      current = tt;
+      return true;
     }
-    naive = new Queue.from(_file.split(LINEEND));
-  }
-
-  Iterator<CsvLineParser> get iterator => new CsvParserIterator(this);
-
-  Queue<String> removeNaiveQueue() => new Queue.from(naive.removeFirst().trim(
-      ).split(SEPERATOR));
-
-
-
 }
 
-class CsvLineParserIterator extends Iterator<String> {
-  CsvLineParser data;
-  CsvLineParserIterator(this.data);
-  String current = null;
 
-  bool moveNext() {
-    if (data.naive.isEmpty) {
-      current = null;
-      return false;
-    }
-    String tt = data.naive.removeFirst();
-    while (tt.startsWith(data.QUOTEMARK) && !tt.endsWith(data.QUOTEMARK)) {
-      tt = tt + data.SEPERATOR + data.naive.removeFirst();
-    }
-    current = tt;
-    return true;
-  }
-}
+class CsvLineParser extends Object with IterableMixin
+{
+  List<String> cols;
+  String separator;
+  String quotemark;
+  String current;
 
-class CsvLineParser extends Object with IterableMixin<String> {
-  String _line;
-  Queue<String> naive;
-  String SEPERATOR;
-  String QUOTEMARK;
+  Iterator get iterator => new CsvLineParserIterator(cols, separator, quotemark);
 
-  Iterator<String> get iterator => new CsvLineParserIterator(this);
+  CsvLineParser(String line, {String separator:",", String quotemark:"\""})
+  {
+    this.separator = separator;
+    this.quotemark = quotemark;
 
-  CsvLineParser(this._line, {String seperator: ",", String quotemark: "\""}) {
-    this.SEPERATOR = seperator;
-    this.QUOTEMARK = quotemark;
-    this.naive = new Queue.from(_line.trim().split(SEPERATOR));
+    this.cols = line.trim().split(separator);
   }
 
 
+
+  toString()
+  {
+    return cols.toString();
+  }
 
 }

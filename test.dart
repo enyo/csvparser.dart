@@ -1,4 +1,4 @@
-import 'web/csvparser.dart';
+import 'lib/csvparser.dart';
 
 
 main()
@@ -12,9 +12,9 @@ main()
   CsvParser data = new CsvParser(raw);
   for(var row in data)
   {
-    for(var col in row)
-    {
-      print('${col}, ');
-    }
+//    for(var col in row)
+//    {
+      print('${row}\t ');
+//    }
   }
 }

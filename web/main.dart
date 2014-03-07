@@ -1,6 +1,6 @@
 //import 'dart:io';
 import 'package:angular/angular.dart';
-import 'csvparser.dart';
+import '../lib/csvparser.dart';
 // Temporary, please follow https://github.com/angular/angular.dart/issues/476
 @MirrorsUsed(override: '*')
 import 'dart:mirrors';
