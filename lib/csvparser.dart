@@ -4,7 +4,7 @@ import 'dart:collection';
 
 class CsvParserIterator extends Iterator {
   CsvLineParser current;
-  List<String> rows;
+  List<CsvLineParser> rows;
   String separator;
   String quotemark;
   int cursor = 0;
@@ -13,16 +13,13 @@ class CsvParserIterator extends Iterator {
 
   bool moveNext()
   {
-    print('CsvParser.cursor: ${cursor}');
     if (rows == null || cursor >= rows.length)
     {
       current = null;
-      // reset the cursor?
-//      cursor = 0;
       return false;
     }
 
-    current = new CsvLineParser(rows[cursor], separator:separator, quotemark:quotemark);
+    current = rows[cursor];
     cursor++;
     return true;
   }
@@ -30,7 +27,7 @@ class CsvParserIterator extends Iterator {
 
 class CsvParser extends Object with IterableMixin
 {
-  List<String> rows;
+  List<CsvLineParser> rows = [];
   String separator;
   String quotemark;
 
@@ -38,15 +35,23 @@ class CsvParser extends Object with IterableMixin
 
   Iterator get iterator => new CsvParserIterator(rows, separator, quotemark);
 
-  CsvParser(String sheet, {String seperator:",", String quotemark:"\"", bool hasHeader:false})
+  CsvParser(String sheet, {String separator:",", String quotemark:"\"", bool hasHeader:false})
   {
-    this.separator = seperator;
+    this.separator = separator;
     this.quotemark = quotemark;
 
-    this.rows = sheet.trim().split('\n');
+    if(sheet != null)
+    {
+      for(var row in sheet.trim().split('\n'))
+      {
+        rows.add(new CsvLineParser(row, separator: separator, quotemark: quotemark));
+      }
+
+    }
+
     if(hasHeader && rows != null && rows.length > 0)
     {
-      header = new CsvLineParser(rows.removeAt(0));
+      header = rows.removeAt(0);
     }
   }
 
@@ -64,26 +69,12 @@ class CsvLineParserIterator extends Iterator
 
   bool moveNext()
     {
-      print('CsvLineParser.cursor: ${cursor}');
       if (cols == null || cursor >= cols.length)
       {
         current = null;
-        // reset the cursor?
-//        cursor = 0;
         return false;
       }
-      String tt = cols[cursor++];
-
-      while (tt.startsWith(quotemark) && !tt.endsWith(quotemark))
-      {
-        tt = tt + separator + cols[cursor++];
-        tt.trim();
-      }
-      if(tt.startsWith(quotemark) && tt.indexOf(quotemark, tt.length-1) > -1)
-      {
-        tt = tt.substring(1, tt.length-1);
-      }
-      current = tt;
+      current = cols[cursor++];
       return true;
     }
 }
@@ -91,7 +82,7 @@ class CsvLineParserIterator extends Iterator
 
 class CsvLineParser extends Object with IterableMixin
 {
-  List<String> cols;
+  List<String> cols = [];
   String separator;
   String quotemark;
   String current;
@@ -103,7 +94,22 @@ class CsvLineParser extends Object with IterableMixin
     this.separator = separator;
     this.quotemark = quotemark;
 
-    this.cols = line.trim().split(separator);
+    var data = line.trim().split(separator);
+    for(int i=0; i < data.length; i++)
+    {
+      String tt = data[i];
+
+      while (tt.startsWith(quotemark) && !tt.endsWith(quotemark))
+      {
+        tt = tt + separator + data[++i];
+        tt.trim();
+      }
+      if(tt.length >= quotemark.length && tt.startsWith(quotemark) && tt.indexOf(quotemark, tt.length-(quotemark.length+1)) > -1)
+      {
+        tt = tt.substring(quotemark.length, tt.length-(quotemark.length));
+      }
+      cols.add(tt);
+    }
   }
 
 

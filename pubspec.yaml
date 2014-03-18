@@ -3,3 +3,4 @@ description: A simple CSV parser
 dependencies:
   angular: any
   browser: any
+  unittest: any
