@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html ng-app>
+<head>
+    <title>Spreadsheet</title>
+</head>
+<body>
+  <div spreadsheet>
+  <table border="1">
+    <tr ng-repeat="row in ctrl.data">
+       <td ng-repeat="col in row">
+        {{col}}
+       </td>
+    </tr>
+  </table>
+  </div>
+  <h3>Hello {{name}}!</h3>
+  Name: <input type="text" ng-model="name">
+  
+  <script src="packages/shadow_dom/shadow_dom.min.js"></script>
+  <script type="application/dart" src="main.dart"></script>
+  <script type="text/javascript" src="packages/browser/dart.js"></script>
+</body>
+</html>
