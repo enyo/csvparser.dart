@@ -24,11 +24,9 @@ class CsvParser extends Object with IterableMixin
       for(var row in sheet.trim().split('\n'))
       {
         data.add(new List<String>());
-        print('${row_cursor}> row: ${row.substring(0, (row.length > 10 ? 10 : row.length))}..., data[${row_cursor}]=${data[row_cursor]}, data.length: ${data.length}');
         var lineParser = new CsvLineParser(row, separator: separator, quotemark: quotemark);
         for(var col in lineParser)
         {
-          print('\t${col.substring(0, (col.length > 10 ? 10 : col.length))}..., data[${row_cursor}]=${data[row_cursor]}, data.length: ${data[row_cursor].length}');
           data[row_cursor].add(col);
         }
         row_cursor++;
