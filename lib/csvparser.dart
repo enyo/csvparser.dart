@@ -2,38 +2,16 @@ library csvparser;
 
 import 'dart:collection';
 
-class CsvParserIterator extends Iterator {
-  CsvLineParser current;
-  List<CsvLineParser> rows;
-  String separator;
-  String quotemark;
-  int cursor = 0;
-
-  CsvParserIterator(this.rows, this.separator, this.quotemark);
-
-  bool moveNext()
-  {
-    if (rows == null || cursor >= rows.length)
-    {
-      current = null;
-      return false;
-    }
-
-    current = rows[cursor];
-    cursor++;
-    return true;
-  }
-}
 
 class CsvParser extends Object with IterableMixin
 {
-  List<CsvLineParser> rows = [];
+  List<List<String>> data = [];
   String separator;
   String quotemark;
 
-  CsvLineParser header;
+  List<String> header;
 
-  Iterator get iterator => new CsvParserIterator(rows, separator, quotemark);
+  Iterator get iterator => data.iterator;
 
   CsvParser(String sheet, {String separator:",", String quotemark:"\"", bool hasHeader:false})
   {
@@ -42,16 +20,25 @@ class CsvParser extends Object with IterableMixin
 
     if(sheet != null)
     {
+      int row_cursor = 0;
       for(var row in sheet.trim().split('\n'))
       {
-        rows.add(new CsvLineParser(row, separator: separator, quotemark: quotemark));
+        data.add(new List<String>());
+        print('${row_cursor}> row: ${row.substring(0, (row.length > 10 ? 10 : row.length))}..., data[${row_cursor}]=${data[row_cursor]}, data.length: ${data.length}');
+        var lineParser = new CsvLineParser(row, separator: separator, quotemark: quotemark);
+        for(var col in lineParser)
+        {
+          print('\t${col.substring(0, (col.length > 10 ? 10 : col.length))}..., data[${row_cursor}]=${data[row_cursor]}, data.length: ${data[row_cursor].length}');
+          data[row_cursor].add(col);
+        }
+        row_cursor++;
       }
 
     }
 
-    if(hasHeader && rows != null && rows.length > 0)
+    if(hasHeader && data.isNotEmpty)
     {
-      header = rows.removeAt(0);
+      header = data.removeAt(0);
     }
   }
 
