@@ -42,28 +42,6 @@ class CsvParser extends Object with IterableMixin
 
 }
 
-class CsvLineParserIterator extends Iterator
-{
-  List<String> cols;
-  String separator;
-  String quotemark;
-  String current;
-  int cursor = 0;
-
-  CsvLineParserIterator(this.cols, this.separator, this.quotemark);
-
-  bool moveNext()
-    {
-      if (cols == null || cursor >= cols.length)
-      {
-        current = null;
-        return false;
-      }
-      current = cols[cursor++];
-      return true;
-    }
-}
-
 
 class CsvLineParser extends Object with IterableMixin
 {
@@ -72,7 +50,7 @@ class CsvLineParser extends Object with IterableMixin
   String quotemark;
   String current;
 
-  Iterator get iterator => new CsvLineParserIterator(cols, separator, quotemark);
+  Iterator get iterator => cols.iterator;
 
   CsvLineParser(String line, {String separator:",", String quotemark:"\""})
   {
