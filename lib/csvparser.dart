@@ -9,9 +9,13 @@ class CsvParser implements Iterator<Iterator<String>> {
   String _SEPERATOR;
   String _QUOTEMARK;
   String _LINEEND;
-  Iterator<String> current=null;
-
-  CsvParser(String file, {String seperator:",", String quotemark:"\"", String lineend:null}) {
+  CsvLineParser current=null;
+  List<String> _HEADERS;
+  int _linenumber=0;
+  
+  int get linenumber=>_linenumber;
+  
+  CsvParser(String file, {String seperator:",", String quotemark:"\"", String lineend:null, bool setHeaders:false}) {
     this._file=file.trim();
     this._SEPERATOR=seperator;
     this._QUOTEMARK=quotemark;
@@ -22,17 +26,45 @@ class CsvParser implements Iterator<Iterator<String>> {
       else
         this._LINEEND="\n";
     }
+    if(_file.endsWith(this._LINEEND))
+      _file = _file.substring(0, _file.length - this._LINEEND.length);
+    if(_file.isEmpty) throw "file empty";
+    
     _naive=new Queue.from(_file.split(_LINEEND));
+    if(setHeaders) {
+      this.moveNext();
+      headers = this.current.toList();
+    }
   }
-
-  Queue<String> _removeNaiveQueue()=>new Queue.from(_naive.removeFirst().trim().split(_SEPERATOR));
-
+  
+  List<String> getLineAsList() {
+    return current.toList();
+  }
+  
+  List<String> get headers=>_HEADERS;
+  
+  void set headers(List<String> h) {
+    _HEADERS=h;
+  }
+  
+  Map<String, String> getLineAsMap({headers:null}) {
+    if(headers==null) headers=this._HEADERS;
+    return current.toMap(headers);
+  }
+    
+  Queue<String> _removeNaiveQueue() {
+    String naiveNextLine = _naive.removeFirst().trim();
+    if (naiveNextLine.isEmpty) throw "unexpected empty line";
+    return new Queue.from(naiveNextLine.split(_SEPERATOR));
+  }
+  
   bool moveNext() {
     if(_naive.isEmpty) {
       current=null;
       return false;
     }
     Queue<String> nn = _removeNaiveQueue();
+    _linenumber++;
     while (nn.last.startsWith(_QUOTEMARK) && !nn.last.endsWith(_QUOTEMARK)) {
       String l = nn.removeLast();
       Queue<String> nn2 = _removeNaiveQueue();
@@ -42,8 +74,16 @@ class CsvParser implements Iterator<Iterator<String>> {
     current = new CsvLineParser(nn.join(_SEPERATOR), seperator:_SEPERATOR, quotemark:_QUOTEMARK);
     return true;
   }
-
+  
 }
+
+class CsvFieldType {
+  static CsvFieldType NUMBER = new CsvFieldType._intern();
+  static CsvFieldType STRING = new CsvFieldType._intern();
+  
+  CsvFieldType._intern();
+}
+
 
 class CsvLineParser implements Iterator<String> {
   String _line;
@@ -51,13 +91,36 @@ class CsvLineParser implements Iterator<String> {
   String _SEPERATOR;
   String _QUOTEMARK;
   String current=null;
-
+  CsvFieldType type;
+  List<String> list;
+  
+  
   CsvLineParser(this._line, {String seperator:",", String quotemark:"\""}) {
     this._SEPERATOR=seperator;
     this._QUOTEMARK=quotemark;
     this._naive=new Queue.from(_line.trim().split(_SEPERATOR));
   }
-
+  
+  List<String> toList() {
+    if(list==null) {
+      list = new List<String>();
+      while(this.moveNext()) {
+        list.add(current);
+      }
+    }
+    return list;
+  }
+  
+  Map<String, String> toMap(List<String> headers) {
+    /*Map<String, String> ret = new Map<String, String>();
+    headers.forEach((String header) {
+      if(!moveNext()) throw "css fault: ${this._line}";
+      ret[header]=current;
+    });
+    if(headers.length!=ret.length) throw "wrong number of fields: ${headers}, ${ret}"; */
+    return new Map.fromIterables(headers, this.toList());
+  }
+  
   bool moveNext() {
     if(_naive.isEmpty) {
       current=null;
@@ -68,7 +131,11 @@ class CsvLineParser implements Iterator<String> {
       tt=tt + _SEPERATOR + _naive.removeFirst();
     }
     current=tt;
+    if (current.startsWith(_QUOTEMARK)) {
+      this.type = CsvFieldType.STRING;
+      current = current.substring(_QUOTEMARK.length, current.length - _QUOTEMARK.length);
+    }
     return true;
   }
-
+  
 }
