@@ -54,7 +54,6 @@ class CsvParser implements Iterator<Iterator<String>> {
     
   Queue<String> _removeNaiveQueue() {
     String naiveNextLine = _naive.removeFirst().trim();
-    if (naiveNextLine.isEmpty) throw "unexpected empty line";
     return new Queue.from(naiveNextLine.split(_SEPERATOR));
   }
 
