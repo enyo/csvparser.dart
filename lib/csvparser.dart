@@ -57,7 +57,19 @@ class CsvParser implements Iterator<Iterator<String>> {
     if (naiveNextLine.isEmpty) throw "unexpected empty line";
     return new Queue.from(naiveNextLine.split(_SEPERATOR));
   }
-  
+
+  bool _queueLineComplete(Queue<String> queue) {
+    int numQuoteMark=0;
+    queue.forEach((elem) {
+      // only count QUOTEMARK which starts or ends an elem (next to a seperator)
+      if (elem.startsWith(_QUOTEMARK))
+        numQuoteMark++;
+      if (elem.endsWith(_QUOTEMARK))
+        numQuoteMark++;
+    });
+    return numQuoteMark.isEven;
+  }
+
   bool moveNext() {
     if(_naive.isEmpty) {
       current=null;
@@ -65,7 +77,7 @@ class CsvParser implements Iterator<Iterator<String>> {
     }
     Queue<String> nn = _removeNaiveQueue();
     _linenumber++;
-    while (nn.last.startsWith(_QUOTEMARK) && !nn.last.endsWith(_QUOTEMARK)) {
+    while (!_queueLineComplete(nn)) {
       String l = nn.removeLast();
       Queue<String> nn2 = _removeNaiveQueue();
       String ln = l + _LINEEND + nn2.removeFirst();
